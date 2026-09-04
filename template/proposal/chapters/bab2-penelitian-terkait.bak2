@@ -1,0 +1,131 @@
+\chapter{TINJAUAN PUSTAKA}
+
+% Literature review covering theoretical foundations and practical applications
+% of scalable software architecture, distributed systems for CBT, and ISO-standardized UI/UX.
+
+\section{Komputasi Teori Respons Butir (IRT)}
+
+Teori Respons Butir (Item Response Theory, IRT) adalah kerangka psikometrik yang membangun asumsi bahwa kinerja responden pada suatu butir soal dipengaruhi oleh sifat-sifat laten yang dimiliki responden (kemampuan atau ability, $\theta$) dan parameter-parameter butir yang spesifik \citep{Hambleton1985, Baker2004}. Model logistik parametrik seperti 1-PL, 2-PL, dan 3-PL telah menjadi standar dalam pengujian global maupun nasional seperti UTBK.
+
+Secara matematis, probabilitas responden $i$ menjawab butir soal $j$ dengan benar dalam model 3-PL didefinisikan sebagai:
+
+\begin{equation}
+	P_{ij}(\theta_i) = c_j + (1 - c_j) \frac{e^{a_j(\theta_i - b_j)}}{1 + e^{a_j(\theta_i - b_j)}}
+\end{equation}
+
+dimana $a_j$ adalah parameter diskriminasi, $b_j$ adalah kesulitan butir, dan $c_j$ adalah paramater tebakan \citep{Birnbaum1968}.
+
+Dari perspektif Ilmu Komputer dan Rekayasa Perangkat Lunak, kalibrasi parameter IRT secara dinamis untuk ribuan siswa secara konkuren adalah proses komputasional yang intensif (\textit{CPU-bound process}). Estimasi parameter seperti \textit{Maximum Likelihood Estimation} (MLE) atau Pendekatan Bayesian melibatkan komputasi matriks berulang dan iterasi numerik yang membebani unit pemrosesan sentral. Hal ini membatasi eksekusi algoritma ini pada bahasa pemrogaman yang tidak dioptimalkan untuk komputasi saintifik. Oleh karenanya, layanan pengolahan IRT umumnya diisolasi ke dalam kerangka layanan mikro (\textit{microservices}) berbasis Python (memanfaatkan optimasi librari operasi pelarik tingkat level C seperti NumPy maupun SciPy) daripada dijalankan pada utas peladen transaksional (*routine*) layaknya fungsi CRUD berbasis Golang.
+
+\section{Sistem Ujian Berbasis Komputer \& Lonjakan Lalu Lintas (Burst Traffic)}
+
+Computer-Based Testing (CBT) menggeser ujian tradisional berbasis kertas menuju media digital. Salah satu tantangan rekayasa infrastruktur yang paling mendasar dalam operasional CBT berskala besar adalah fenomena \textit{thundering herd} atau lonjakan lalu lintas yang terpusat dan berdurasi pendek (\textit{burst traffic}).
+
+Dalam skenario ujian dunia nyata, ratusan atau bahkan ribuan siswa pada sekolah yang sama akan mengakses sistem dan melakukan pengumpulan jawaban (\textit{exam submission}) secara serentak pada hitungan detik yang sama saat bel hitung mundur waktu ujian berakhir. Lonjakan konkurensi ini memicu pelipatgandaan HTTP \textit{request} secara seketika, yang pada gilirannya menyebabkan interupsi peladen (\textit{downtime}), hambatan pita jaringan (\textit{network bottleneck}), dan penipisan jumlah koneksi pangkalan data (\textit{database connection pool exhaustion}) pada arsitektur \textit{monolithic} tradisional. Penanganan \textit{burst traffic} membutuhkan desain konkurensi tingkat lanjut menggunakan pendekatan pemrograman reaktif atau arsitektur antrean asinkron agar terhindar dari pemblokiran utas eksekusi (\textit{thread blocking}) dan kondisi balapan (\textit{race condition}).
+
+\section{Integritas Ujian dan Metode Anti-Kecurangan dalam CBT}
+
+Salah satu kelemahan fundamental Computer-Based Testing adalah kerentanan terhadap kecurangan akibat ketiadaan pengawas fisik \citep{Wibowo2018,Sorensen2018}. Metode anti-kecurangan dalam CBT dapat diklasifikasikan menjadi empat kategori:
+
+\begin{enumerate}
+	\item \textbf{Deteksi Berbasis Perilaku (\textit{Behavior-Based}):} Mendeteksi perubahan status perangkat seperti perpindahan tab peramban, keluar dari mode layar penuh, aktivasi \textit{screen saver}, atau restart perangkat. Keunggulannya adalah non-invasif dan kompatibel lintas platform \citep{Dawson2017}.
+
+	\item \textbf{Pengawasan Berbasis Biometrik (\textit{Biometric Proctoring}):} Menggunakan webcam untuk mendeteksi gerakan mata (\textit{gaze tracking}), ekspresi wajah, dan keberadaan orang lain di ruangan. Metode ini akurat namun invasif dan membutuhkan bandwidth tinggi \citep{Chuang2020}.
+
+	\item \textbf{Deteksi Berbasis Analitik (\textit{Analytic-Based}):} Menganalisis pola jawaban untuk mendeteksi kemiripan antar peserta (\textit{answer copying}), waktu pengerjaan yang tidak wajar, atau pola jawaban yang mengindikasikan kerja sama \citep{Wollack2003}.
+
+	\item \textbf{Pengendalian Lingkungan (\textit{Environment Control}):} Membatasi akses sistem operasi melalui \textit{lockdown browser} (seperti Safe Exam Browser, Respondus) atau \textit{Android screen pinning} (LockTask mode) yang mengunci perangkat ke satu aplikasi \citep{Franchi2019}.
+\end{enumerate}
+
+Platform ujian komersial yang ada menerapkan metode-metode di atas secara terpisah dan tidak terintegrasi dengan sistem penilaian psikometrik. Tabel \ref{tab:platform-comparison} menunjukkan perbandingan fitur antar platform.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Perbandingan Platform Ujian Online}
+\label{tab:platform-comparison}
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Fitur} & \textbf{Anycademy} & \textbf{Moodle} & \textbf{ProctorU} & \textbf{Exam.net} & \textbf{G-Forms} \\
+\hline
+Penilaian IRT               & $\bullet$ & -- & -- & -- & -- \\
+\hline
+Anti-cheat multi-platform   & $\bullet$ & $\sim$ & $\bullet$ & $\bullet$ & -- \\
+\hline
+Eskalasi berjenjang         & $\bullet$ & -- & -- & -- & -- \\
+\hline
+SAAS multi-tenant           & $\bullet$ & $\bullet$ & $\bullet$ & $\bullet$ & $\bullet$ \\
+\hline
+Async message queue         & $\bullet$ & -- & -- & -- & -- \\
+\hline
+AI PDF parsing soal         & $\bullet$ & -- & -- & -- & -- \\
+\hline
+Bisnis Indonesia            & $\bullet$ & $\bullet$ & -- & -- & $\bullet$ \\
+\hline
+\end{tabular}
+\end{table}
+
+Keterangan: $\bullet$ = Tersedia; $\sim$ = Terbatas (plug-in); -- = Tidak tersedia.
+
+Dalam konteks penelitian ini, Anycademy mengadopsi pendekatan \textbf{deteksi berbasis perilaku} (kategori 1) yang dikombinasikan dengan \textbf{pengendalian lingkungan} (kategori 4) — yaitu Android \textit{screen pinning} via Capacitor, \textit{fullscreen enforcement} pada browser, serta deteksi \textit{tab-switch} dan \textit{device restart}. Mekanisme eskalasi hukuman berjenjang (\textit{graduated sanction}) diterapkan: pelanggaran pertama mengakibatkan pemblokiran sementara (10 menit), pelanggaran kedua memperpanjang blokir (20 menit), dan pelanggaran ketiga memicu pengumpulan otomatis (\textit{auto-submit}) ujian.
+
+\section{Arsitektur Perangkat Lunak Terskala Tinggi}
+
+Untuk mengatasi keterbatasan stabilitas perangkat lunak, paradigma pola desain arsitektur berskala tinggi mutlak diaplikasikan:
+
+\subsection{Microservices versus Monolithic}
+
+Arsitektur sinkronus tradisional \textit{Monolithic} menyatukan seluruh antarmuka, logika bisnis, dan pengolahan basis data dalam satu entitas layanan \citep{Newman2015}. Kelebihannya terletak pada kemudahan implementasi pemantauan jejak pelacakan galat, namun skalabilitasnya amatlah terbatas dan rentan ambruk saat sistem harus mengkompensasi beban asimetris antar fiturnya.
+
+Sebagai antitesis, arsitektur \textit{Microservices} memecah fungsionalitas logika aplikasi menjadi layanan-layanan portabel dan tersendiri \citep{Newman2015}. Metode agnostik perantara ini memastikan bahwa jika fitur layanan penskoran matematis IRT mendadak menerima utilisasi performa ekstrim hingga batas limitnya, maka rekayasawan cukup memberhentikan atau menggandakan klaster peladen layanan IRT itu saja (\textit{scale-up}/\textit{scale-out}), alih-alih memberatkan modul transaksi ujian lain. Dalam konteks Anycademy, metode perpaduan (hybrid) diimplementasikan; sebuah \textit{Modular Monolith} (berbasis sistem Go)\ dipertahankan lantaran kecepatannya mendistribusikan modul manajemen *state* dan ruter, disinkronisasikan bersama \textit{Rest API microservices} cerdas kecerdasan buatan dan perhitungan kalkulasi IRT mandiri menggunakan perantara pustaka Python FastAPI.
+
+\section{Sistem Message Broker dan Antrean Asinkron (Async Queue)}
+
+Strategi optimasi komputasi paling krusial demi mengeliminasi penumpukan beban kueri (*overload*) selama lonjakan ujian massal adalah pelolosan arsitektur *asynchronous* melalui peran mediator pialang pesan (*message broker*) digabung skema alur distribusi antrean (*distributed task queues*).
+
+Penggunaan pangkalan struktur penyimpanan berbasis ingatan utama kilat (*in-memory*) seperti Redis bersama dengan perpustakaan sinkronisasi latar belakang seperti Asynq, memfasilitasi arsitektur pola "Penerbit-Pelanggan" (\textit{Publisher-Subscriber} / Pub-Sub). Ketimbang membiasakan proses penyimpanan kueri jawaban dari belasan ribu terminal ujian membebani baris tulis transaksional PostgreSQL secara sinkron dan mendempet jeda kompilasinya, *web backend* diarahkan sekedar meresahkan persetujuan HTTP 202 ("Jawaban Diterima dalam Antrean"), mendelegasikan payload muatan skoring beruntun, selagi \textit{background worker task} diam-diam me-resolve kalkulasi probabilitas matriks algoritmik IRT dan persistensi penulisan basis data belakangan guna murni mengakomodir kenyamanan layar interaksi peserta tes yang steril (\textit{seamless execution}).
+
+\section{Multi-Tenant SaaS dan Isolasi Data}
+
+Dari sisi komersialisasinya, sistem Anycademy diusung terarsitektur melalui wujud integrasi \textit{Software/System as a Service} (SaaS) bermodel entitas jamak (\textit{multi-tenant}). Multi-tenancy melingkupi metode khusus rekayasa penyebaran di mana sebentuk (\textit{single-instance}) klon aplikasi kode sumber tunggal serta hierarki penyetelan model peladen pangkalan datanya dikonfigurasi simultan demi menyokong berganda penyewa terpisah (klien sekolah, lembaga bimbingan mengajar, institusi, dst.).
+
+Risiko kelemahan dari platform ed-tech tersentralisasi sedemikian adalah terobosan penyekatan privasi dan intervensi batas otoritas rekam jejak (\textit{Security Privileges}). Isolasi logika perpaduan lintas kolom (\textit{Logical Isolation / Shared Database but Isolated Schema}) mereduksi kekhawatiran itu pada beban infrastruktur termurah secara holistik (\textit{Cost Effective}). Validasi restriktif sistem manajemen data RDBMS pada peladen PostgreSQL dipertegas pada lapis regulasi \textit{Row-Level Security} (RLS). Setiap akses terotentikasi dimitigasi secara silang dengan referensi identitas Organisasi/Tenant terkekang yang disusupkan lewat otorisasi berlapis keping \textit{JSON Web Token} (JWT) \citep{Khan2013}.
+
+\section{Lingkaran Interaksi Manusia-Komputer dengan User-Centered Design (ISO 9241-210)}
+
+Dalam industri ed-tech lintas skala SaaS, orkestrasi *backend server* solid tidak akan optimal perancangannya, bilamana dihadapkan kepada kegagalan usabilitas pengguna (*human error*) dikarenakan rancangan antarmuka yang mengacaukan limit memori kognitif klien awam (\textit{cognitive overload}). Pendekatan empiris disiplin teknik Interaksi Manusia-Komputer (HCI) difasilitasi ke dalam kaidah rancang bangun UCD berpedoman standarisasi fabrikasi internasional, yaitu ISO 9241-210: *Human-centred design for interactive systems* \citep{ISO92412010}.
+
+\subsection{Rekayasa Antarmuka UI/UX Berpusat Pengguna}
+
+Model tahapan pengembangan ISO merekomendasikan literasi desain iteratif dan siklus usabilitas *prototyping* kualitatif berbasis kebutuhan langsung target *user*. Di area sistem CBT, implementasi lini layar sentuh UI dan alur pengalaman UX bercabang menjadi dua rute fungsionalitas tumpu:
+
+\begin{enumerate}
+	\item \textbf{CBT Interaktif bagi Siswa (Laman Ujian Asesmen):} Lingkungan antarmuka yang presisi direkayasa demi meminimalisasi redudansi letak opsi fungsi pemicu, bersih distorsi tata ruang, hingga keandalan koneksi navigasi *autosave* di atas gejolak jaringan lemah, untuk meredakan limit beban stres saat siswa menghadapi tensi tempo ujian penentu tinggi (*High-Stakes Session*).
+	\item \textbf{Dasbor Dasbor Analitik Pendidik (Teacher Portal):} Transkripsi teknis grafis kalkulasi kompleks eksponen dan diskriminasi IRT didekonsolidasikan, mensimplifikasi indikator logistik logaritma mentah menuju panel \textit{insight} wawasan representasi parameter siswa yang lebih intuitif namun esensial merangkum efektivitas *actionable learning decision* pengajaran.
+\end{enumerate}
+
+\subsection{Kuantifikasi Validasi System Usability Scale (SUS)}
+
+Menyoal validasi teknikal pasca konstruksi prototipe, verifikasi tingkat kompatibilitas keberhasilan sasaran desain layar dari ISO 9241-210 (\textit{Usability Testing}) ditranslasikan dalam kuantifikasi metrik industri bernilai matematis, yang dikarakteristik melalui tes penyelesaian \textit{System Usability Scale} (SUS) \citep{Brooke1996}. Instrumen pengukuran koefisien SUS terdiri atas sepuluh rangkaian pernyataan umpan survei kuisioner \textit{likelihood} skor 1 hingga 5, mensitesiskan efektivitas kemudahan orientasi antarmuka sasaran; yang lazim dimutlakkan sukses bernilai positif bilamana rekam skor rata rata subjek penilai minimal konsisten meraih klasifikasi metrik akhir $\geq 68$.
+
+\section{Pengujian Validitas Skalabilitas Kinerja Perangkat Lunak}
+
+Kesiapan unjuk gigi performa implementasi infrastruktur \textit{backend} akan divisualisasikan melalui tes stres simulatur komprehensif mengacu kepada parameter audit optimisasi perangkat lunak awam:
+\begin{itemize}
+	\item \textbf{Throughput:} Frekuensi daya penyelesaian akumulasi paket \textit{I/O requests/transactions} bersih yang sukses diproses peladen hitungan persatuan selang waktu detik — identik didefinisikan sebagai rasio \textit{Requests Per Second} (RPS).
+	\item \textbf{Latensi (Latency/Response Response Time):} Metrik konversi sekuen temporal delta waktu rekam jejak kapan komando antarmuka API terminal pertama kali direquest (\textit{send}) hingga *payload content* usai dikirim kembali utuh (\textit{acknowledge response}).
+	\item \textbf{Tingkat Eksepsi Trafik (Error Rate):} Angka rasio probabilitas kegagalan eksepsi jaringan serta I/O \textit{fatal bug}, yang memetakan tumpahan interupsi \textit{HTTP 5xx Server Error} hingga frekuensi sambungan pemutusan waktu tenggang (\textit{connection timeouts}) akibat peladen tidak kuat menyanggupi lonjakan paksaan beban dalam interval padat serentak.
+	\item \textbf{Utilisasi Komputasi (Resource Metrics):} Batas parameter pemrosesan penggunaan inti sirkuit pemroses data prosesor terunggah (\textit{CPU Allocation}) maupun daya penyimpanan memori \textit{Memory/RAM}.
+\end{itemize}
+Metodologi tinjauan penjelajahan audit peranti di atas divalidasi presisi memakai perangkat bantu replikator lonjakan rekayasa kueri maya bernama \textit{Load Testing} (simulasi perilaku padat pengguna paralel skala riil) dilanjutkan pengerasan kompresi beruntun lewat \textit{Stress Testing} (penentuan *breaking/crash points* saat rentetan lalu lintas memprovokasi muatan paksaan abnormalitas trafik melampaui batasan kapasitas kognitif mesin arsitektur yang disediakan).
+
+\section{Kesenjangan Penelitian (Research Gap) dan Pemosisian}
+
+Berdasarkan tinjauan pustaka di atas, tiga kesenjangan penelitian (\textit{research gap}) teridentifikasi:
+\begin{enumerate}
+	\item Platform ujian online yang ada menangani penilaian psikometrik (IRT) \textbf{atau} integritas ujian (anti-cheat), tetapi belum ada yang mengintegrasikan keduanya dalam satu arsitektur SAAS.
+	\item Mekanisme anti-kecurangan yang ada umumnya bersifat biner (\textit{block}/\textit{allow}) tanpa eskalasi hukuman berjenjang yang memberikan kesempatan koreksi kepada peserta.
+	\item Literatur yang mendokumentasikan pengujian beban arsitektur SAAS ujian yang menggabungkan \textit{message queue}, \textit{microservices} IRT, dan deteksi anti-kecurangan secara simultan masih terbatas.
+\end{enumerate}
+
+Penelitian ini memposisikan Anycademy sebagai solusi yang mengisi ketiga kesenjangan tersebut: sebuah platform SAAS CBT yang mengintegrasikan deteksi kecurangan multi-platform dengan eskalasi hukuman berjenjang dan penilaian IRT dalam arsitektur \textit{modular monolith} + \textit{microservices}. Validasi dilakukan melalui pengujian beban sintetik (\textit{load testing} dengan K6) dan pengujian efektivitas deteksi anti-kecurangan pada tiga platform target (Android, desktop browser, dan web).

@@ -1,0 +1,102 @@
+\chapter{PENDAHULUAN}
+
+\section{Latar Belakang}
+
+% TODO: Tulis latar belakang penelitian Anda di sini.
+% Jelaskan konteks, urgensi, dan relevansi topik yang dipilih.
+% Rujuk pada penelitian terdahulu dan data sekunder jika ada.
+
+Indonesia memiliki lebih dari 316 ribu sekolah yang terkoneksi internet\cite{indonesiabaikRibuSekolah}.
+Dari seluruh sekolah tersebut, seluruhnya diwajibkan untuk mengikuti Tes Kemampuan Akademik (TKA) yang berskala nasional 
+dan dilakukan menggunakan sarana komputer atau \emph{Computer-Based Testing} (CBT). Hal ini menimbulkan kebutuhan akan 
+kegiatan persiapan ujian TKA bagi tiap sekolah. Kegiatan persiapan ujian TKA harus mensimulasikan kondisi 
+ujian TKA yang sesungguhnya, hal ini termasuk akan penggunaan software ujian daring yang mirip.
+
+Platform persiapan ujian daring (Computer-Based Testing/CBT) saat ini menghadapi sejumlah tantangan utama untuk digunakan 
+sebagai software persiapan atau simulasi bagi institusi. Dua tantangan utama tersebut yaitu ketersediaan algoritma 
+penilaian IRT pada software dan kapasitas software untuk menampung dan mengelola data \emph{concurrent} submision 
+dalam jumlah besar atau lebih dari 1000 request per detik. Jumlah data sangat penting bagi institusi karena keakuratan 
+parameter IRT sangat bergantung pada jumlah data yang tersedia. Hal ini disebabkan oleh adanya potensi penyimpangan 
+statistik dari jumlah data yang tersedia akan mempengaruhi keakuratan parameter IRT sehingga menyebabkan
+penurunan akurasi skor.
+
+Di sisi lain, tidak semua institusi pendidikan, sekolah, maupun bimbingan belajar memiliki kapabilitas finansial dan
+keahlian rekayasa piranti lunak untuk memelihara infrastruktur mandiri demi satu sistem ujian yang pelaksanaannya
+bersifat temporal. Kebutuhan akan solusi \textit{hosted} ini mendasari perlunya sebuah perangkat lunak berbiaya rendah,
+mudah diakses, dan dapat diandalkan untuk mengelola ujian daring berskala besar.
+
+Penelitian ini menjadikan platform ujian "Anycademy" sebagai studi kasus teknis \emph{software as a service} multi-tenancy.
+Arsitektur \textit{backend} akan dirancang menjadi berbasis microservices dengan modul-modul terpisah meliputi 
+autentikasi, manajemen dan pemrosesan data tryout, skoring IRT, manajemen \emph{user}, queue, cache, dan database batching.
+Fokus penelitian ini adalah pada modul autentikasi, penilaian berbasis IRT, dan pengelolaan data ujian secara berskala besar
+dengan simulasi diatas 1000 peserta secara simultan. 
+
+\section{Rumusan Masalah}
+
+% TODO: Tulis rumusan masalah dalam bentuk pertanyaan penelitian.
+% Rumusan masalah harus spesifik, terukur, dan dapat dijawab.
+
+Berdasarkan latar belakang di atas, rumusan masalah dalam penelitian ini adalah:
+
+\begin{enumerate}
+	\item Bagaimana merancang arsitektur backend platform ujian daring berbasis SaaS yang memisahkan beban proses bisnis umum secara \textit{modular monolith} dengan pemrosesan matematik IRT ke agen layanan mikro (\textit{microservice}) demi menjaga kestabilan platform?
+  \item Bagaimana mengembangkan alur pipa (\textit{pipeline}) pendaftaran nilai berantre dengan bantuan \textit{message broker} guna mengelola penyerahan ujian secara konkuren, guna mencegah \textit{race condition} maupun \textit{downtime}?
+	\item Bagaimana performa arsitektur yang dikembangkan saat diukur dan divalidasi terhadap skenario \textit{burst traffic} masif dan simulasi pelanggaran anti-kecurangan berdasarkan metrik \textit{throughput}, latensi, dan utilisasi komputasi?
+\end{enumerate}
+
+\section{Batasan Masalah}
+
+% TODO: Tulis batasan masalah untuk memfokuskan penelitian.
+% Batasan dapat mencakup ruang lingkup, teknologi, atau aspek yang tidak diteliti.
+
+Agar penelitian ini tetap fokus dan terukur di lingkup Ilmu Komputer, batasan masalah yang ditetapkan adalah:
+
+\begin{enumerate}
+	\item \textbf{Fokus Arsitektur Backend:} Penelitian difokuskan pada perancangan arsitektur backend platform Anycademy, yang spesifik mencakup sistem \textit{modular monolith} dengan Go, orkestrasi perpesanan dengan Redis, serta integrasi layanan mikro komputasi berat IRT dengan Python FastAPI.
+	\item \textbf{Lingkup Eksklusi Psikometrik:} Analisis terhadap sistem IRT dalam sistem ini murni diukur dari performa teknologi komputasionalnya, seperti Big-O ekseskusi, latensi dan efisiensi memori, tanpa mengukur validitas dan ketepatan perhitungan psikometrik secara keilmuan pendidikan.
+	\item \textbf{Implementasi Multi-Tenancy:} Metode \textit{multi-tenancy} dibatasi pada implementasi isolasi data secara logis (\textit{Logical Separation/Row-level atau Schema-level}) pada \textit{database} (PostgreSQL), dan tidak mencakup penerapan pemisahan secara fisik (contohnya pembagian klaster basis data bagi masing-masing institusi).
+	\item \textbf{Skala Pengujian Beban:} Skenario pengujian skalabilitas (seperti \textit{Load Testing} dan \textit{Stress Testing}) akan mengutilisasi konfigurasi spesifik untuk skenario pengumpulan ujian (*exam submission*) simulasi serentak.
+\end{enumerate}
+
+\section{Tujuan Penelitian}
+Tujuan dari penelitian ini adalah:
+\begin{enumerate}
+	\item Mendesain pola arsitektur backend sistem SaaS yang memisahkan antara beban proses bisnis umum secara \textit{modular monolith} dengan pemrosesan matematik IRT ke agen layanan mikro (*microservice*) demi menjaga kestabilan platform.
+	\item Mengembangkan alur pipa (*pipeline*) pendaftaran nilai berantre dengan bantuan \textit{message broker} guna mengelola penyerahan ujian secara konkuren, guna mencegah \textit{race condition} maupun \textit{downtime}.
+	\item Mengetahui batas puncak performa server (*hardware limit*) beserta skalabilitas piranti lunaknya lewat analisis statistik kuantitatif terhadap \textit{throughput} (T/s), waktu respons (\textit{response latency}), dan penggunaan CPU/RAM selama simulasi ujian intensif divalidasi.
+\end{enumerate}
+
+\section{Manfaat Penelitian}
+
+Hasil dari penelitian ini diharapkan dapat memberikan kontribusi sebagai berikut:
+
+\begin{enumerate}
+	\item \textbf{Manfaat Teoritis:} Penelitian ini berkontribusi pada literatur rekayasa perangkat lunak dengan menyajikan
+  studi kasus konkret mengenai pola arsitektur hibrida (\textit{polyglot architecture}) untuk domain ed-tech yang 
+  menuntut komputasi intensif sekaligus ketahanan terhadap lonjakan trafik konkuren. Secara khusus, penelitian ini 
+  memperkaya pemahaman tentang bagaimana pemisahan tanggung jawab antara proses bisnis umum (\textit{modular monolith}) 
+  dan komputasi numerik berat (\textit{microservice}) dapat dirumuskan sebagai pola desain yang dapat direplikasi pada 
+  sistem serupa.
+
+	\item \textbf{Manfaat Praktis (Industri Perangkat Lunak \& Pengembang EdTech):} Penelitian ini diharapkan dapat menjadi 
+  rujukan teknis dan cetak biru (\textit{blueprint}) arsitektur bagi pengembang maupun tim rekayasa yang merancang sistem 
+  ujian daring berskala besar, khususnya dalam mengombinasikan keunggulan konkurensi bahasa Go untuk lapisan layanan 
+  inti dengan kekuatan ekosistem numerik/ilmiah Python untuk beban komputasi psikometrik. Dengan demikian, hasil penelitian 
+  dapat mempercepat proses pengambilan keputusan arsitektural pada proyek-proyek ed-tech serupa, tanpa perlu melalui proses 
+  trial-and-error dari nol.
+
+\end{enumerate}
+
+
+\section{Sistematika Penulisan}
+
+% TODO: Sesuaikan sistematika penulisan dengan struktur penelitian Anda.
+
+Sistematika penulisan proposal tugas akhir ini adalah sebagai berikut:
+
+\begin{itemize}
+	\item \textbf{Bab I:} Pendahuluan --- berisi pendefinisian latar belakang problem rekayasa sistem, rumusan arsitektural, ruang lingkup implementasi teknis, luaran fungsionalitas, serta manfaat komputasional program.
+	\item \textbf{Bab II:} Tinjauan Pustaka --- merangkum karya-karya terkait \textit{software scaling}, perbandingan arsitektur (\textit{Monolith vs Microservices}), manajemen antrean asinkronus, serta teknologi landasan CBT.
+	\item \textbf{Bab III:} Metode Penelitian --- menjabarkan alur metodologi rekayasa perancangan arsitektur, diagaram topologi \textit{SaaS}, pemodelan integrasi modul, skema basis data, dan rancangan pengujian \textit{stress \& load test}.
+	\item \textbf{Bab IV:} Jadwal Penelitian --- memuat Gantt Chart linimasa fase perancangan hingga implementasi prototipe.
+\end{itemize}

@@ -1,0 +1,92 @@
+\chapter{JADWAL PENELITIAN}
+
+Penelitian ini direncanakan berlangsung selama \textbf{4 bulan} dengan fokus pada perancangan, implementasi, pengujian, dan dokumentasi arsitektur perangkat lunak Anycademy. Jadwal disusun berdasarkan alur rekayasa perangkat lunak yang dijelaskan pada Bab III.
+
+\section{Ringkasan Fase}
+
+\begin{enumerate}
+  \item \textbf{Fase 1 --- Perancangan Arsitektur (Bulan 1):} Analisis kebutuhan sistem, perancangan topologi arsitektur (\textit{modular monolith} + \textit{microservices}), perancangan skema basis data (PostgreSQL, MongoDB, Redis), dan perancangan API endpoints.
+
+  \item \textbf{Fase 2 --- Implementasi (Bulan 1--3):} Pengembangan backend (Go/Gin), \textit{microservices} (Python FastAPI: IRT + AI), frontend (React/Vite), integrasi Redis/Asynq \textit{message queue}, implementasi \textit{multi-platform anti-cheat}, dan \textit{deployment} via Docker Compose.
+
+  \item \textbf{Fase 3 --- Pengujian (Bulan 3--4):} \textit{Load} dan \textit{stress testing} dengan K6, pengujian efektivitas anti-kecurangan pada tiga platform, pengujian usabilitas antarmuka dengan \textit{System Usability Scale} (SUS), dan evaluasi performa \textit{pipeline} IRT.
+
+  \item \textbf{Fase 4 --- Dokumentasi \& Pelaporan (Bulan 3--4):} Penulisan dokumentasi teknis, analisis hasil pengujian, penyusunan laporan tugas akhir, dan finalisasi naskah.
+\end{enumerate}
+
+\section{Gantt Chart}
+
+\begin{table}[H]
+\centering
+\caption{Jadwal Penelitian Anycademy --- 4 Bulan}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\multirow{2}{*}{\textbf{Kegiatan}} & \multicolumn{4}{c|}{\textbf{Bulan}} \\
+\cline{2-5}
+ & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} \\
+\hline
+\multicolumn{5}{|c|}{\textbf{Fase 1: Perancangan}} \\
+\hline
+Studi literatur \& analisis kebutuhan & $\bullet$ &   &   &  \\
+\hline
+Perancangan arsitektur sistem & $\bullet$ &   &   &  \\
+\hline
+Perancangan skema basis data & $\bullet$ &   &   &  \\
+\hline
+Perancangan API endpoints & $\bullet$ & $\bullet$ &   &  \\
+\hline
+\hline
+\multicolumn{5}{|c|}{\textbf{Fase 2: Implementasi}} \\
+\hline
+Pengembangan backend (Go/Gin) & $\bullet$ & $\bullet$ & $\bullet$ &  \\
+\hline
+Pengembangan IRT Service (Python) & $\bullet$ & $\bullet$ &   &  \\
+\hline
+Pengembangan AI Service (Python) & $\bullet$ & $\bullet$ &   &  \\
+\hline
+Pengembangan frontend (React/Vite) & $\bullet$ & $\bullet$ & $\bullet$ &  \\
+\hline
+Integrasi Redis/Asynq queue &   & $\bullet$ & $\bullet$ &  \\
+\hline
+Implementasi multi-platform anti-cheat &   & $\bullet$ & $\bullet$ &  \\
+\hline
+Deployment Docker Compose &   & $\bullet$ & $\bullet$ &  \\
+\hline
+\hline
+\multicolumn{5}{|c|}{\textbf{Fase 3: Pengujian}} \\
+\hline
+Load \& stress testing (K6) &   &   & $\bullet$ & $\bullet$ \\
+\hline
+Pengujian efektivitas anti-cheat &   &   & $\bullet$ & $\bullet$ \\
+\hline
+Pengujian usabilitas (SUS) &   &   &   & $\bullet$ \\
+\hline
+Evaluasi performa IRT pipeline &   &   & $\bullet$ &  \\
+\hline
+\hline
+\multicolumn{5}{|c|}{\textbf{Fase 4: Dokumentasi \& Pelaporan}} \\
+\hline
+Penulisan dokumentasi teknis &   & $\bullet$ & $\bullet$ & $\bullet$ \\
+\hline
+Analisis hasil pengujian &   &   & $\bullet$ & $\bullet$ \\
+\hline
+Penyusunan laporan TA &   &   & $\bullet$ & $\bullet$ \\
+\hline
+Finalisasi naskah &   &   &   & $\bullet$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\noindent \textbf{Keterangan:} $\bullet$ = Kegiatan dilaksanakan pada bulan tersebut.
+
+\section{Milestone Kritis}
+
+\begin{itemize}
+  \item \textbf{Akhir Bulan 1:} Desain arsitektur dan skema basis data selesai. Backend \textit{core} (auth, exam CRUD) berfungsi di lingkungan lokal.
+  
+  \item \textbf{Akhir Bulan 2:} Backend dan frontend terintegrasi penuh. IRT Service dan AI Service berfungsi. Sistem anti-cheat (\textit{KIOSK mode}, \textit{tamper detection}) terimplementasi pada web dan Android.
+  
+  \item \textbf{Akhir Bulan 3:} Seluruh fitur terimplementasi. Pengujian beban dengan K6 dan pengujian efektivitas anti-cheat selesai. Hasil pengujian terdokumentasi.
+  
+  \item \textbf{Akhir Bulan 4:} Laporan tugas akhir selesai, termasuk analisis hasil pengujian, kesimpulan, dan saran pengembangan. Naskah siap diserahkan.
+\end{itemize}

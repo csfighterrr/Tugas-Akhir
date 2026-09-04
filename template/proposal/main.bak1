@@ -1,0 +1,123 @@
+\documentclass[proposal,indonesia]{ugmskripsi}
+% Options:
+%   skripsi / proposal        (default: skripsi)
+%   satuspasi / duaspasi / satusetengahspasi (default: satusetengahspasi)
+%   indonesia / inggris       (default: indonesia)
+
+%------------------------------------------------------------
+% Metadata Proposal
+%------------------------------------------------------------
+% TODO: Ganti metadata di bawah ini dengan data Anda sendiri
+\titleind{Perancangan dan Implementasi Arsitektur Software as a Service untuk Sistem Ujian Daring dengan Integrasi Anti-Kecurangan Multi-Platform dan Penilaian Berbasis Item Response Theory}
+\titleeng{Design and Implementation of a Software as a Service Architecture for an Online Examination System with Multi-Platform Anti-Cheat Integration and Item Response Theory-Based Assessment}
+\fullname{Nugroho Adi Susanto}
+\idnum{23/520312/PA/22367}
+\degree{BACHELOR}
+\gelar{SARJANA}
+\yearsubmit{2026}
+\program{ILMU KOMPUTER}
+\dept{ILMU KOMPUTER DAN ELEKTRONIKA INSTRUMENTASI}
+\firstsupervisor{NAMA DOSEN PEMBIMBING}
+\firstexaminer{NAMA DOSEN PENGUJI 1}
+\secondexaminer{NAMA DOSEN PENGUJI 2}
+
+%------------------------------------------------------------
+% Packages
+%------------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{enumitem}
+
+% Code listing style
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    stringstyle=\color{orange},
+    showstringspaces=false,
+    tabsize=2
+}
+
+% Define YAML language for listings
+\lstdefinelanguage{yaml}{
+  keywords={true,false,null,y,n},
+  sensitive=false,
+  comment=[l]{\#},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]',
+  morestring=[b]"
+}
+
+% Define Docker language for listings
+\lstdefinelanguage{docker}{
+  alsoletter={-},
+  keywords={FROM,RUN,CMD,LABEL,MAINTAINER,EXPOSE,ENV,ADD,COPY,ENTRYPOINT,VOLUME,USER,WORKDIR,ARG,ONBUILD,STOPSIGNAL,HEALTHCHECK,SHELL},
+  sensitive=false,
+  comment=[l]{\#},
+  morestring=[b]',
+  morestring=[b]"
+}
+
+%------------------------------------------------------------
+% Document Body
+%------------------------------------------------------------
+\begin{document}
+
+% Preliminary Pages (Proposal: minimal)
+\cover
+\titlepageind
+\approvalpage
+
+\tableofcontents
+
+\abstractind
+% Intisari dalam Bahasa Indonesia (150-250 kata)
+
+Platform ujian daring (Computer-Based Testing/CBT) menghadapi dua tantangan utama: integritas ujian dari kecurangan akibat ketiadaan pengawas fisik, dan keadilan penilaian yang tidak dapat dicapai dengan metode skoring klasik. Platform yang ada saat ini menangani skoring psikometrik atau integritas ujian secara terpisah—belum ada yang mengintegrasikan keduanya dalam satu arsitektur Software as a Service (SAAS).
+
+Penelitian ini bertujuan merancang dan mengimplementasikan arsitektur SAAS multi-tenant untuk platform ujian "Anycademy" yang mengintegrasikan deteksi kecurangan multi-platform dengan penilaian berbasis Item Response Theory (IRT). Sistem anti-kecurangan menerapkan deteksi berbasis perilaku (perpindahan tab, keluar layar penuh, screen pinning Android) dengan eskalasi hukuman berjenjang—block sementara pada pelanggaran pertama dan kedua, auto-submit pada pelanggaran ketiga. Penilaian menggunakan model IRT 3-Parameter Logistic (3PL) yang dijalankan pada layanan mikro Python FastAPI, terhubung ke backend modular monolith Golang melalui message queue Redis/Asynq.
+
+Validasi dilakukan melalui tiga jenis pengujian: load dan stress testing menggunakan K6 untuk mengukur throughput dan latensi pada skenario burst traffic, simulasi pelanggaran anti-kecurangan pada platform Android, desktop web, dan mobile web untuk mengukur detection rate dan false positive rate, serta pengujian usabilitas antarmuka menggunakan System Usability Scale (SUS).
+
+Hasil penelitian menunjukkan bahwa arsitektur yang diusulkan mampu menangani lonjakan trafik ujian secara bersamaan dengan menjaga integritas ujian melalui deteksi kecurangan multi-platform. Kombinasi message queue asinkron dan isolasi layanan IRT pada microservices terpisah mencegah race condition dan thread blocking pada backend utama.
+
+Kata kunci: arsitektur SaaS, ujian daring, anti-kecurangan, Item Response Theory, multi-platform, message queue.
+\endabstractind
+
+\abstracteng
+% TODO: Write abstract in English here (150-250 words).
+% Explain background, objectives, methods, and results.
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+\endabstracteng
+
+%------------------------------------------------------------
+% Chapters
+%------------------------------------------------------------
+\include{chapters/bab1-pendahuluan}
+\include{chapters/bab2-penelitian-terkait}
+\include{chapters/bab3-metodologi}
+\include{chapters/bab4-jadwal-penelitian}
+
+%------------------------------------------------------------
+% Bibliography
+%------------------------------------------------------------
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,67 @@
+\chapter{METODE PENELITIAN}
+
+% Research methodology outlining system architecture design, engineering phases, 
+% backend load testing setups, and frontend UI/UX validation metrics.
+
+Penelitian ini dilaksanakan menggunakan kerangka kerja Rekayasa Perangkat Lunak (Software Engineering) terstruktur. Sasaran utamanya adalah membangun, mendemonstrasikan, dan memvalidasi keandalan arsitektur \textit{Software as a Service} (SaaS) Anycademy dalam menangani kalkulasi \textit{Item Response Theory} (IRT) serta lalu lintas konkuren berskala masif.
+
+\section{Alur Penelitian}
+
+Tahapan rekayasa dilaksanakan melalui siklus pengembangan sekuensial yang berfokus pada desain infrastruktur sistem terdistribusi, yang meliputi fase-fase berikut:
+
+\begin{enumerate}
+	\item \textbf{Analisis Kebutuhan Arsitektural:} Mendefinisikan spesifikasi batasan konkurensi (misal: sanggup menangani $10.000$ \textit{request} per detik) dan limitasi kebutuhan isolasi \textit{multi-tenant}.
+	\item \textbf{Perancangan Sistem \& Topologi:} Memetakan diagram komunikasi antara proksi \textit{frontend}, API \textit{Go Monolith}, antrean basis \textit{Redis}, dan layanan \textit{microservices Python}.
+	\item \textbf{Implementasi \& Pengkodean:} Menerjemahkan spesifikasi desain backend ke dalam kode program riil (deployment lewat \textit{Docker Compose}) serta mengembangkan antarmuka klien menggunakan *React/Vite*.
+	\item \textbf{Pengujian Kinerja (Backend):} Mengeksekusi pengetesan resistensi (\textit{Load \& Stress Testing}) melalui platform kompilator \textit{synthetic burst traffic}.
+	\item \textbf{Pengujian Integritas (Anti-Cheat):} Mensimulasikan skenario pelanggaran pada tiga platform target (Android, desktop web, mobile web) untuk memvalidasi efektivitas deteksi dan eskalasi hukuman.
+	\item \textbf{Pengujian Usabilitas (Frontend):} Memvalidasi kelugasan UI/UX dasbor pendidik dan CBT siswa memanfaatkan metrik \textit{System Usability Scale} (SUS).
+	\item \textbf{Evaluasi \& Pelaporan:} Penarikan rujukan empiris analisis statistik berdasar grafik *throughput latency* dan nilai batas ukur kuesioner kelayakan SUS.
+\end{enumerate}
+
+\section{Perancangan Arsitektur Sistem}
+
+Sistem dirancang memakai topologi gabungan fungsional silang (\textit{Hybrid Distributed Structure}). Komponen dibagi berdasarkan porsi intensitas komputasinya guna menghindari pemblokiran *thread* pemrosesan I/O.
+
+\subsection{Topologi Layanan Modular (Modular Monolith \& Microservices)}
+Modul transaksi umum (otentikasi otorisasi lintas portal organisasi, manajemen kursus, penagihan IPG, dan alur perizinan formulir siswa) disatukan ke dalam blok **Golang Main API** berarsitektur *Modular Monolith*. Pilihan bahasa Go dilandasi oleh kecakapan kompilator aslinya di pengolahan *goroutines* paralel.
+Sebaliknya, modul beban mesin kecerdasan algoritmik murni diestafetkan ke blok khusus **Python Microservices** (\textit{AI-Service} dan \textit{IRT-Service}). Layanan ini merangkum *endpoint* eksternal dari NLP, transkripsi *Image to Text* (OCR), beserta kalibrasi perhitungan kompleks probabilitas bobot nilai IRT agar tidak merebut alokasi ingatan memori perute utama.
+
+\subsection{Skema Message Queue Asinkronus}
+Untuk mengatasi problem luapan lalu-lintas kolektif (\textit{thundering herd}) spesifik jam hitung mundur kumpul jawaban (submit), rekayasa perantara pialang pesan ditugaskan kepada klaster **Redis**. Modul API Go akan mendorong (push) struktur jawaban JSON mentah (\textit{payload}) murni ke baris antrean sementara dan merespon pengakuan ke *frontend* secara instan. Di latar layar, pekerja terdistribusi (*background workers*) mengkonsumsi memori tersebut lalu perlahan meresolusinya dan menyuntik pembaruan permanen penulisan (*write locks*) kepada tabel pangkalan PostgreSQL tanpa merampas kuota basis peladen SQL seketika.
+
+\subsection{Desain Database Multi-Tenancy}
+Repositori *PostgreSQL* disusun mengusung skema isolasi data logis tingkat keamanan baris (\textit{Row-Level Security/RLS}). Setiap entitas tabel krusial memiliki struktur penanda rujukan identifikasi unik ID Tenan/Organisasi. Peraturan kebijakan (Policy) hak tangkap akses pangkalan data direstriksi otomatis menelusuri klaim sertifikat *JSON Web Token* (JWT) yang dienkripsi rahasia, memastikan satu guru tidak bisa menarik lembar analitik silang dari sekolahan atau institut saingannya.
+
+\section{Perancangan Antarmuka UI/UX (ISO 9241-210)}
+
+Rekayasa perwujudan purwarupa penampang muka diejawantahkan secara berulang iteratif (\textit{Iterative Design}). Pada fase desain sketsa rendah (\textit{Wireframing}), tata letak ruang kosong dasbor (\textit{white-space}) penampang layar resolusi monitor sekolah atau tablet murid dimodelkan. Progres ini memuncak via kompilasi purwarupa *high-fidelity* yang menganut sistem desain terpusat (contoh komponen *shadcn/ui* bawaan *Tailwind CSS*) agar pola konsistensi psikomotor usabilitas tidak berubah drastis sepanjang alur interaktivitas sesi kuis simulasi stres maupun pencarian nilai logistik.
+
+\section{Skenario Evaluasi \& Pengujian}
+
+Tiga tipe pengujian parameter disiapkan guna membuktikan legitimasi skalabilitas, integritas, maupun kelugasan desain perangkat lunak tesis:
+
+\subsection{Pengujian Performa Backend (Load \& Stress Testing)}
+Sinyal trafik lonjakan tinggi buatan (*syntethic burst traffic*) akan dihasilkan memakai instrumen pengujian komersial \textit{Apache JMeter} atau piranti mutakhir modern berlandaskan Go seperti \textit{k6}.
+Skenario beban bertamu akan mengatur \textit{arrival rate} yang eksponensial di rentang durasi singkat (misal: tembakan $1.000$ hingga $10.000$ kueri kumpul kuis per detik pada satu interval menit yang fluktuatif).
+Sasaran statistik yang dikoleksi adalah:
+\begin{enumerate}
+	\item \textbf{RPS (Requests Per Second) aktual:} Seberapa banyak lalu lintas tersaring persekian milidetik yang divalidasi HTTP 20X oleh Nginx/Router tanpa hangus tumpah (*Dropped Packets*).
+	\item \textbf{Latensi Waktu Respons:} Waktu tunggu (*p95 / p99 percentiles delay*) rata-rata klien sebelum mendapatkan instruksi sukses layar CBT.
+	\item \textbf{Error Rate:} Rekam kemunculan putus sambungan atau ambruk layanan (HTTP 502/503/504).
+	\item \textbf{Hardware Utilisasi:} Observasi persentase batas alokasi serapan limit RAM beserta inti CPU *server*.
+\end{enumerate}
+
+\subsection{Pengujian Antarmuka Frontend (Usabilitas SUS)}
+Sampel survei akan mendata partisipasi audiens representatif ($N \geq 30$ responden campuran, meliputi peraga peran tenaga kependidikan penganalisis nilai dasbor dan representasi murid penyimak portal *student exam browser*). Indeks nilai instrumen validasi kuesioner \textit{System Usability Scale} sepuluh set pertanyaan direkap guna menyimpulkan justifikasi kepuasan pemakaian sasaran (\textit{acceptance threshold} $\geq 68$ skor batas konversi minimum standarisasi ISO).
+
+\section{Lingkungan Implementasi}
+
+Guna menjamin validitas kemanjuran proses rekayasa berulang, struktur ekosistem dasar (lingkungan instalasi piranti keras simulasi klaster *server* serta versi *library* fiksasi *software*) ditetapkan eksak sebagai berikut:
+\begin{itemize}
+	\item \textbf{Backend Core:} Golang 1.25.1.
+	\item \textbf{Microservices Environment:} Python 3.12/3.14 dipersenjatai kapabilitas FastAPI, NumPy, \& Tesseract OCR.
+	\item \textbf{Frontend Application:} *React* 18.3 dirakit lewat pendistribusi modul *Vite*.
+	\item \textbf{Infrastruktur Persistensi \& Buffer Data:} PostgreSQL v15 (melalui rute *Relational Database*) saling membedayakan tangkapan memori Redis v7 (*Cache/MQ Broker*).
+	\item \textbf{Piranti Orkestrasi Deployment:} Ruang kontainer *Docker Engine* tersinkronisasi via *Docker Compose*.
+\end{itemize}

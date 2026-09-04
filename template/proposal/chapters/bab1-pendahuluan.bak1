@@ -1,0 +1,109 @@
+\chapter{PENDAHULUAN}
+
+\section{Latar Belakang}
+
+% TODO: Tulis latar belakang penelitian Anda di sini.
+% Jelaskan konteks, urgensi, dan relevansi topik yang dipilih.
+% Rujuk pada penelitian terdahulu dan data sekunder jika ada.
+
+Penggunaan teknologi dalam sistem pendidikan, khususnya Ujian Berbasis Komputer (Computer-Based Test/CBT),
+telah berkembang secara masif. Di Indonesia, penilaian ujian berskala nasional seperti Ujian Tulis Berbasis Komputer (UTBK)
+dan Tes Kemampuan Akademik (TKA) secara resmi telah menggunakan Teori Respons Butir (Item Response Theory/IRT).
+Penilaian berbasis IRT jauh lebih kompleks secara komputasi dibandingkan penilaian klasik (Classical Test Theory),
+karena membutuhkan kalkulasi matematis yang intensif (seperti perhitungan probabilitas logistik dan kalibrasi parameter
+butir uji), yang secara drastis meningkatkan kebutuhan memori dan waktu komputasi (\textit{CPU bound}) pada peladen.
+
+Dalam rekayasa perangkat lunak sistem CBT, tantangan infrastruktur terbesar muncul pada pola lalu lintas data yang
+terpusat dan berdurasi pendek atau yang dikenal sebagai \textit{burst traffic}.
+Pada saat jadwal ujian serentak, puluhan hingga ratusan ribu siswa dapat mengakses halaman ujian dan mengirimkan
+jawaban secara bersamaan. Arsitektur \textit{monolithic} tradisional yang menggabungkan web server dan tugas penghitungan
+skor dalam satu utas pemrosesan rentan terhadap masalah interupsi layanan (\textit{downtime}),
+latensi ekstrim, dan kehilangan paket data (*data loss*) jika terjadi kegagalan sistem saat perhitungan.
+
+Di sisi lain, tidak semua institusi pendidikan, sekolah, maupun bimbingan belajar memiliki kapabilitas finansial dan
+keahlian rekayasa piranti lunak untuk memelihara infrastruktur mandiri demi satu sistem ujian yang pelaksanaannya
+bersifat temporal. Kebutuhan akan solusi \textit{hosted} ini mendasari perlunya sebuah arsitektur
+\textit{Software/System as a Service} (SaaS) bermodel \textit{multi-tenant},
+yang memungkinkan puluhan institusi menggunakan mesin CBT yang sama secara paralel dengan beban dan ruang penyimpanan
+(isolasi skema data) yang terpisah.
+
+Di luar aspek skalabilitas komputasi, tantangan krusial lainnya dalam CBT berskala tinggi adalah integritas ujian.
+Ketiadaan pengawas langsung (\textit{remote proctoring}) membuka celah kecurangan: peserta dapat berpindah tab
+peramban, keluar dari mode layar penuh, mematikan dan menyalakan ulang perangkat, hingga menggunakan aplikasi
+tambahan untuk mencari jawaban \citep{Dawson2017,Sorensen2018}. Platform ujian komersial yang ada saat ini umumnya
+menangani skoring \textbf{atau} integritas ujian secara terpisah: Safe Exam Browser menyediakan \textit{browser
+	lockdown} namun tanpa penilaian IRT \citep{Schneider2015}, sementara sistem seperti ProctorU mengandalkan pengawasan
+manusia berbasis webcam yang invasif dan mahal \citep{ProctorU2020}. Belum ada platform yang mengintegrasikan deteksi
+kecurangan multi-platform berbasis perilaku (\textit{behavioral detection}) dengan penilaian psikometrik IRT dalam
+satu arsitektur SAAS.
+
+Anycademy dirancang untuk mengisi kesenjangan tersebut: sebuah platform SAAS CBT yang mengintegrasikan deteksi
+kecurangan multi-platform (Android \textit{screen pinning}, Capacitor \textit{tamper detection}, browser
+\textit{fullscreen enforcement}) dengan eskalasi hukuman berjenjang (\textit{block} $\rightarrow$
+\textit{auto-submit}) ke dalam pipeline penilaian Item Response Theory (IRT).
+
+Penelitian ini menjadikan platform ujian "Anycademy" sebagai studi kasus teknis.
+Arsitektur \textit{backend} akan dirancang menjadi berbasis \textit{modular monolith} (diimplementasikan dengan Golang)
+yang menangani sistem otentikasi serta transaksi, terhubung dengan layanan mikro spesifik (*microservices*)
+untuk AI dan pengolahan IRT yang berjalan di atas Python (FastAPI). Untuk menjamin *scalability* selama ujian,
+sistem menggunakan struktur pengantrean asinkron (\textit{Asynchronous Message Queuing}) terdistribusi menggunakan Redis.
+Tujuan dari penelitian perangkat lunak ini adalah mendesain, mengimplementasikan, dan membuktikan kinerja toleransi kesalahan
+(*fault-tolerance*) dari tumpukan arsitektur tersebut melalui pengujian beban sintetik berskala tinggi.
+
+\section{Rumusan Masalah}
+
+% TODO: Tulis rumusan masalah dalam bentuk pertanyaan penelitian.
+% Rumusan masalah harus spesifik, terukur, dan dapat dijawab.
+
+Berdasarkan latar belakang di atas, rumusan masalah dalam penelitian ini adalah:
+
+\begin{enumerate}
+  \item Bagaimana merancang arsitektur perangkat lunak \textit{multi-tenant SaaS} yang mengintegrasikan deteksi kecurangan multi-platform dengan pipeline penilaian berbasis Item Response Theory (IRT)?
+  \item Bagaimana mengimplementasikan mekanisme anti-kecurangan dengan eskalasi hukuman berjenjang (\textit{graduated sanction}) di platform web, Android, dan desktop, serta menghubungkannya dengan sistem \textit{message queue} asinkron untuk menjaga skalabilitas saat lonjakan trafik ujian?
+  \item Bagaimana performa arsitektur yang dikembangkan saat diukur dan divalidasi terhadap skenario \textit{burst traffic} masif dan simulasi pelanggaran anti-kecurangan berdasarkan metrik \textit{throughput}, latensi, utilisasi komputasi, dan efektivitas deteksi?
+\end{enumerate}
+
+\section{Batasan Masalah}
+
+% TODO: Tulis batasan masalah untuk memfokuskan penelitian.
+% Batasan dapat mencakup ruang lingkup, teknologi, atau aspek yang tidak diteliti.
+
+Agar penelitian ini tetap fokus dan terukur di lingkup Ilmu Komputer, batasan masalah yang ditetapkan adalah:
+
+\begin{enumerate}
+	\item \textbf{Fokus Arsitektur Backend:} Penelitian difokuskan pada perancangan arsitektur _backend_ platform Anycademy, yang spesifik mencakup sistem \textit{modular monolith} dengan Go, orkestrasi perpesanan dengan Redis, serta integrasi layanan mikro komputasi berat IRT dengan Python FastAPI.
+	\item \textbf{Lingkup Eksklusi Psikometrik:} Analisis terhadap sistem IRT dalam sistem ini murni diukur dari performa teknologi komputasionalnya, seperti Big-O ekseskusi, latensi dan efisiensi memori, tanpa mengukur validitas dan ketepatan perhitungan psikometrik secara keilmuan pendidikan aslinya.
+	\item \textbf{Implementasi Multi-Tenancy:} Metode \textit{multi-tenancy} dibatasi pada implementasi isolasi data secara logis (\textit{Logical Separation/Row-level atau Schema-level}) pada \textit{database} (PostgreSQL), dan tidak mencakup penerapan pemisahan secara fisik (contohnya pembagian klaster basis data bagi masing-masing institusi).
+	\item \textbf{Skala Pengujian Beban:} Skenario pengujian skalabilitas (seperti \textit{Load Testing} dan \textit{Stress Testing}) akan mengutilisasi konfigurasi spesifik untuk skenario pengumpulan ujian (*exam submission*) simulasi serentak.
+\end{enumerate}
+
+\section{Tujuan Penelitian}
+Tujuan dari penelitian ini adalah:
+\begin{enumerate}
+	\item Mendesain pola arsitektur backend sistem SaaS yang memisahkan antara beban proses bisnis umum secara \textit{modular monolith} dengan pemrosesan matematik IRT ke agen layanan mikro (*microservice*) demi menjaga kestabilan platform.
+	\item Mengembangkan alur pipa (*pipeline*) pendaftaran nilai berantre dengan bantuan \textit{message broker} guna mengelola penyerahan ujian secara konkuren, guna mencegah \textit{race condition} maupun \textit{downtime}.
+	\item Mengetahui batas puncak performa server (*hardware limit*) beserta skalabilitas piranti lunaknya lewat analisis statistik kuantitatif terhadap \textit{throughput} (T/s), waktu respons (\textit{response latency}), dan penggunaan CPU/RAM selama simulasi ujian intensif divalidasi.
+\end{enumerate}
+
+\section{Manfaat Penelitian}
+Penelitian ini diharapkan memberikan manfaat berikut:
+\begin{enumerate}
+	\item \textbf{Teoritis:} Memperkaya khasanah referensi akademis dalam arsitektur perangkat lunak untuk skenario pendidikan ed-tech yang mengharuskan komputasi intensif dan lonjakan (\textit{burst}) pengunjung konkuren pada satu waktu.
+
+	\item \textbf{Praktis (Industri Perangkat Lunak \& Pengembang EdTech):} Menjadi manual pedoman serta purwarupa desain nyata dan \textit{scalable} untuk pengembang web lintas bahasa pemrogaman yang memadukan keunggulan konkurensi (Go) dan keunggulan librari numerik/ilmiah (Python).
+
+	\item \textbf{Praktis (Platform Anycademy):} Menghasilkan sebuah sistem backend produksi (\textit{production-ready}) berskala mumpuni yang andal melayani jutaan baris permintaan bagi calon lembaga institusi klien Anycademy.
+\end{enumerate}
+
+\section{Sistematika Penulisan}
+
+% TODO: Sesuaikan sistematika penulisan dengan struktur penelitian Anda.
+
+Sistematika penulisan proposal tugas akhir ini adalah sebagai berikut:
+
+\begin{itemize}
+	\item \textbf{Bab I:} Pendahuluan --- berisi pendefinisian latar belakang problem rekayasa sistem, rumusan arsitektural, ruang lingkup implementasi teknis, luaran fungsionalitas, serta manfaat komputasional program.
+	\item \textbf{Bab II:} Tinjauan Pustaka --- merangkum karya-karya terkait \textit{software scaling}, perbandingan arsitektur (\textit{Monolith vs Microservices}), manajemen antrean asinkronus, serta teknologi landasan CBT.
+	\item \textbf{Bab III:} Metode Penelitian --- menjabarkan alur metodologi rekayasa perancangan arsitektur, diagaram topologi \textit{SaaS}, pemodelan integrasi modul, skema basis data, dan rancangan pengujian \textit{stress \& load test}.
+	\item \textbf{Bab IV:} Jadwal Penelitian --- memuat Gantt Chart linimasa fase perancangan hingga implementasi prototipe.
+\end{itemize}
